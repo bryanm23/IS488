@@ -49,7 +49,7 @@ def compare_reports(file_paths):
         
         previous_data = current_data
 
-    # Write results to a text file in the same directory as the script. If there is no increase, there is no file created.
+    # Write results to a text file in the same directory as the script. If there is no increase, there is no file created. Running it for all files does generate a report.
     output_file = 'cpu_usage_report.txt'
     with open(output_file, 'w', encoding='utf-8') as f:
         for result in results:
