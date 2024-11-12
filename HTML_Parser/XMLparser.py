@@ -1,6 +1,10 @@
+# While looking through the files, and doing some research, I found that XML files are generally easier to parse.
+# The HTML files were thousands of lines of unreadable code, and XML was much more clearly labeled. VSCode also made it very easy to parse XML documents.
 import os
 import xml.etree.ElementTree as ET
 import re
+
+#Built in XML parser to use with Python.
 
 def find_xml_files(directory):
     """Find all XML files in the specified directory and its subdirectories."""
@@ -15,17 +19,17 @@ def extract_cpu_usage(file_path):
     """Extracts CPU usage data from an XML file."""
     cpu_data = []
 
-    # Parse XML file
+    # Parse the XML file using the built in tool
     tree = ET.parse(file_path)
     root = tree.getroot()
     
     print(f"\n--- Processing {file_path} ---")
     
-    # Iterate over all items and look for the SysHealthCpuComponent
+    # Iterate over all items and look for the SysHealthCpuComponent (what the XML file labels the data as)
     for item in root.findall(".//Item"):
         component = item.find(".//Data[@name='component']")
         if component is not None and component.text == "SysHealthCpuComponent":
-            # Find the utilization data
+            # Find the data
             utilization = item.find(".//Data[@name='util']")
             if utilization is not None and utilization.text:
                 try:
@@ -45,7 +49,7 @@ def compare_reports(file_paths):
     for file_path in file_paths:
         cpu_data = extract_cpu_usage(file_path)
         
-        # Output current CPU usage to the terminal
+        # Output current CPU usage to the terminal.
         print(f"File: {file_path}")
         print(f"CPU Usage: {cpu_data}")
         
@@ -54,6 +58,7 @@ def compare_reports(file_paths):
                 if prev > 0 and (curr - prev) / prev * 100 >= 40:
                     result = f"Significant CPU increase detected: {prev}% to {curr}% in {file_path}"
                     results.append(result)
+                    #Lets you know if a CPU increase is detected.
         
         previous_cpu_data = cpu_data
 
