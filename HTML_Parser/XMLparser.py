@@ -2,6 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 import re
 from openpyxl import Workbook
+# Import all needed tools. XML etree is an XML parser, and openpyxl is used to parse and export into Excel.
 
 def find_xml_files(directory):
     """Find all XML files in the specified directory and its subdirectories."""
@@ -47,7 +48,7 @@ def extract_cpu_and_ram_usage(file_path):
                     ram_data_percent.append(ram_usage_percent)
                     total_ram_percent += ram_usage_percent
                     
-                    # Retrieve the available memory in MB
+                    # Retrieve the memory in MB
                     detail = item.find(".//Data[@name='detail']")
                     if detail is not None:
                         match = re.search(r'(\d+) MB', detail.text)
@@ -57,7 +58,7 @@ def extract_cpu_and_ram_usage(file_path):
                 except ValueError:
                     pass
 
-        # Look for "memoryWorkingSet", "pid", and "process, the values in the XML report"
+        # Look for "memoryWorkingSet", "pid", and "process" in the XML report
         pid = item.find(".//Data[@name='pid']")
         memory_working_set = item.find(".//Data[@name='memoryWorkingSet']")
         process = item.find(".//Data[@name='process']")
@@ -89,8 +90,11 @@ def compare_reports(file_paths):
     sheet = workbook.active
     sheet.title = "Resource Usage Report"
 
-    # Add headers to Excel sheet
+    # Add headings to Excel sheet
     sheet.append(["Process ID", "Process Name", "Memory Working Set (MB)", "CPU Utilization (%)", "RAM Utilization (%)"])
+
+    total_ram_gb = 16  # Total RAM in GB (16 GB on my machine)
+    total_ram_mb = total_ram_gb * 1024  # Convert to MB
 
     for file_path in file_paths:
         cpu_data, ram_data_percent, ram_data_mb, memory_working_set_per_process, total_cpu, total_ram_percent, count = extract_cpu_and_ram_usage(file_path)
@@ -111,8 +115,9 @@ def compare_reports(file_paths):
 
         # Write data to the Excel sheet
         for pid, process_name, working_set in memory_working_set_per_process:
-            # Write data for each process along with CPU and RAM utilization
-            sheet.append([pid, process_name, f"{working_set:.2f}", ", ".join(map(str, cpu_data)), ", ".join(map(str, ram_data_percent))])
+            # Calculate RAM utilization percentage based on 16 GB of total RAM on my machine
+            ram_utilization_percentage = (working_set / total_ram_mb) * 100  # Convert to percentage
+            sheet.append([pid, process_name, f"{working_set:.2f}", ", ".join(map(str, cpu_data)), f"{ram_utilization_percentage:.2f}"])
 
         if previous_cpu_data:
             for prev, curr in zip(previous_cpu_data, cpu_data):
@@ -132,7 +137,7 @@ def compare_reports(file_paths):
     # Sort memory working set data in order from highest to lowest (used in the txt file)
     memory_working_set_all_reports.sort(key=lambda x: x[2], reverse=True)
 
-    # Save the Excel file, overwriting the previous)
+    # Save the Excel file, overwriting the previous
     excel_output_file = "resource_usage_report.xlsx"
     workbook.save(excel_output_file)
     print(f"Excel report generated successfully: {excel_output_file}")
